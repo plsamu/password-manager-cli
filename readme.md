@@ -1,4 +1,4 @@
-# keystore-cli
+# password-manager-cli
 
 ## sources
 

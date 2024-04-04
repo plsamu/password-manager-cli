@@ -1,0 +1,9 @@
+pub const SALT: &[u8] = "bel-salt-bro".as_bytes(); // must be 12 bit long
+pub const FILENAME: &str = "keystore";
+pub const ROUNDS: u32 = 30_000;
+pub const ADD_APP: &str = "Add App";
+pub const REMOVE_APP: &str = "Remove App";
+pub const GET_PASSWORD: &str = "Get Password";
+pub const ADD_PASSWORD: &str = "Add Password";
+pub const REMOVE_PASSWORD: &str = "Remove Password";
+pub const EXIT: &str = "Exit";
