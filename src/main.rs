@@ -4,6 +4,7 @@ pub mod views;
 
 use crate::utils::crypt;
 use crate::utils::decrypt;
+use crate::views::read_user_input;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -90,29 +91,19 @@ fn run_app(password: String, mut keystore: Keystore) {
         let menu = load_menu_apps(&keystore);
         terminal_menu::run(&menu);
         let mut_menu = terminal_menu::mut_menu(&menu);
-        // TODO change terminal_menu::string not work as you think
-        println!("{}", mut_menu.selected_item_name());
-        std::thread::sleep(Duration::from_millis(1500));
         match mut_menu.selected_item_name() {
             ADD_APP => {
-                println!("{}", "Adding app");
-                std::thread::sleep(Duration::from_millis(1500));
-                let app_name = mut_menu.selection_value(ADD_APP);
+                let user_input_app_name = read_user_input("Insert App Name: ");
                 keystore.apps.push(App {
-                    name: app_name.to_owned(),
+                    name: user_input_app_name,
                     pwds: vec![],
                 });
-                let menu = load_menu_apps(&keystore);
-                terminal_menu::run(&menu);
             }
             REMOVE_APP => {
                 clear_screen();
                 println!("{}", REMOVE_APP)
             }
-            EXIT => {
-                println!("{}", EXIT);
-                exit(0)
-            }
+            EXIT => exit(0),
             _ => {}
         }
     }

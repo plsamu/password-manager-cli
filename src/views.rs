@@ -1,10 +1,10 @@
-use std::io::Write;
+use std::io::{self, Write};
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use crossterm::style::Color;
+use terminal_menu::TerminalMenuStruct;
 use terminal_menu::{button, label, menu};
-use terminal_menu::{string, TerminalMenuStruct};
 
 use crate::utils::clear_screen;
 use crate::{Keystore, ADD_APP, EXIT, REMOVE_APP};
@@ -23,6 +23,16 @@ pub fn create_new_password() -> std::string::String {
     password1
 }
 
+pub fn read_user_input(msg: &str) -> std::string::String {
+    std::io::stdout().flush().unwrap();
+    println!("{}", msg);
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    input = input.trim().to_string();
+    std::io::stdout().flush().unwrap();
+    input
+}
+
 pub fn read_password() -> std::string::String {
     clear_screen();
     print!("Type your master password: ");
@@ -31,23 +41,13 @@ pub fn read_password() -> std::string::String {
 }
 
 pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
-    println!("load_menu_apps");
-    std::thread::sleep(Duration::from_millis(1500));
     let mut vec_menu = vec![
         label("Password Manager CLI").colorize(Color::Blue),
-        string(ADD_APP, "", /* allow empty string */ false),
+        button(ADD_APP),
         button(REMOVE_APP),
     ];
     let mut apps_buttons = vec![];
-    let apps_name: Vec<&str> = keystore
-        .apps
-        .iter()
-        .map(|app| {
-            println!("{}", app.name);
-            std::thread::sleep(Duration::from_millis(1500));
-            app.name.as_ref()
-        })
-        .collect();
+    let apps_name: Vec<&str> = keystore.apps.iter().map(|app| app.name.as_ref()).collect();
     apps_name
         .iter()
         .for_each(|app_name| apps_buttons.push(button(app_name.to_string())));
