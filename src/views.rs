@@ -39,18 +39,17 @@ pub fn load_remove_apps_menu(apps: &Vec<App>) -> Arc<RwLock<TerminalMenuStruct>>
     menu(apps_buttons)
 }
 
-pub fn create_new_password() -> std::string::String {
+pub fn create_new_password(message: &str, confirm_message: &str) -> Result<String, String> {
     clear_screen();
-    println!("Keystore not found. Creating master password:");
     std::io::stdout().flush().unwrap();
-    let password1 = rpassword::prompt_password("Write your new master password: ").unwrap();
+    let password1 = rpassword::prompt_password(message).unwrap();
     std::io::stdout().flush().unwrap();
-    let password2 = rpassword::prompt_password("Confirm: ").unwrap();
+    let password2 = rpassword::prompt_password(confirm_message).unwrap();
     if password1 != password2 {
-        println!("password should be the same");
-        std::process::exit(1);
+        Err("Password should be the same".to_string())
+    } else {
+        Ok(password1)
     }
-    password1
 }
 
 pub fn read_user_input(msg: &str) -> std::string::String {

@@ -1,9 +1,11 @@
 pub mod constants;
 pub mod models;
+pub mod profile_manager;
 pub mod utils;
 pub mod views;
 
 use crate::models::App;
+use crate::profile_manager::handle_profile_selected;
 use crate::utils::crypt;
 use crate::utils::decrypt;
 use crate::views::load_remove_apps_menu;
@@ -30,10 +32,17 @@ fn main() {
     .expect("Error setting Ctrl-C handler");
     let path = Path::new(FILENAME);
     if !path.exists() {
-        let pwd = create_new_password();
+        println!("Keystore not found. Creating master password:");
+        let pwd = create_new_password(
+            "Write your new master password: ",
+            "Confirm master password: ",
+        );
+        if let Err(err) = pwd {
+            panic!("Couldn't create master password: {}", err)
+        }
         let keystore: Keystore = Keystore { apps: vec![] };
         let text = serde_json::to_string(&keystore).unwrap();
-        let ciphertext = crypt(&pwd, text);
+        let ciphertext = crypt(&pwd.clone().unwrap(), text);
         let mut data_file = File::create(path).expect("creation failed");
         match data_file.write(&ciphertext.clone().unwrap()) {
             Ok(_) => {}
@@ -41,7 +50,7 @@ fn main() {
                 panic!("Couldn't write in file, {}", err)
             }
         }
-        run_app(pwd, keystore)
+        run_app(pwd.unwrap(), keystore)
     } else {
         let pwd = views::read_password();
         let ciphertext: Vec<u8> = std::fs::read(FILENAME).expect("Unable to read file");
@@ -96,6 +105,9 @@ fn run_app(password: String, mut keystore: Keystore) {
                 if app.name == mut_menu.selected_item_name() {
                     let menu_profiles = views::load_menu_profiles(&app);
                     terminal_menu::run(&menu_profiles);
+                    let mut_profile_menu = terminal_menu::mut_menu(&menu_profiles);
+                    let profile_selected = mut_profile_menu.selected_item_name();
+                    handle_profile_selected(profile_selected);
                 }
             }),
         }
