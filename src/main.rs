@@ -3,7 +3,6 @@ pub mod constants;
 pub mod models;
 pub mod profile;
 pub mod utils;
-pub mod views;
 
 use std::path::Path;
 

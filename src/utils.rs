@@ -1,5 +1,5 @@
 use std::fs::OpenOptions;
-use std::io::Write;
+use std::io::{self, Write};
 use std::time::Duration;
 
 use chacha20poly1305::aead::Aead;
@@ -17,6 +17,38 @@ use crossterm::{
 };
 
 use crate::{constants, Keystore};
+
+pub fn create_new_password(message: &str, confirm_message: &str) -> String {
+    loop {
+        clear_screen();
+        let password1 = rpassword::prompt_password(message).unwrap();
+        std::io::stdout().flush().unwrap();
+        let password2 = rpassword::prompt_password(confirm_message).unwrap();
+        if password1 == password2 {
+            return password1;
+        } else {
+            println!("Passwords must match.");
+            std::thread::sleep(Duration::from_millis(800));
+        }
+    }
+}
+
+pub fn read_password() -> std::string::String {
+    clear_screen();
+    print!("Type your master password: ");
+    std::io::stdout().flush().unwrap();
+    rpassword::read_password().unwrap()
+}
+
+pub fn read_user_input(msg: &str) -> std::string::String {
+    std::io::stdout().flush().unwrap();
+    println!("{}", msg);
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+    input = input.trim().to_string();
+    std::io::stdout().flush().unwrap();
+    input
+}
 
 pub fn exit_without_save(exit_code: i32) {
     println!("Exit Without Saving");
