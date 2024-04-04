@@ -9,22 +9,21 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::process::exit;
-use std::time::Duration;
 use std::vec;
 
 use constants::*;
-use crossterm::style::Color;
 use serde::{Deserialize, Serialize};
-use terminal_menu::button;
-use terminal_menu::label;
-use terminal_menu::menu;
-use terminal_menu::string;
+use utils::exit_without_save;
 use views::create_new_password;
 use views::load_menu_apps;
 
 use crate::utils::clear_screen;
 
 fn main() {
+    ctrlc::set_handler(move || {
+        exit_without_save();
+    })
+    .expect("Error setting Ctrl-C handler");
     let path = Path::new(FILENAME);
     if !path.exists() {
         let pwd = create_new_password();
@@ -91,6 +90,9 @@ fn run_app(password: String, mut keystore: Keystore) {
         let menu = load_menu_apps(&keystore);
         terminal_menu::run(&menu);
         let mut_menu = terminal_menu::mut_menu(&menu);
+        if mut_menu.canceled() {
+            exit_without_save();
+        }
         match mut_menu.selected_item_name() {
             ADD_APP => {
                 let user_input_app_name = read_user_input("Insert App Name: ");
@@ -103,7 +105,10 @@ fn run_app(password: String, mut keystore: Keystore) {
                 clear_screen();
                 println!("{}", REMOVE_APP)
             }
-            EXIT => exit(0),
+            EXIT => {
+                utils::save(&password, &keystore);
+                exit(0);
+            }
             _ => {}
         }
     }

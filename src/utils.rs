@@ -1,4 +1,6 @@
+use std::fs::File;
 use std::io::Write;
+use std::time::Duration;
 
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit};
@@ -14,7 +16,25 @@ use crossterm::{
     QueueableCommand,
 };
 
-use crate::constants;
+use crate::{constants, Keystore};
+
+pub fn exit_without_save() {
+    println!("Exit Without Saving");
+    std::thread::sleep(Duration::from_millis(1100));
+    std::process::exit(1);
+}
+
+pub fn save(pwd: &String, keystore: &Keystore) {
+    let mut file = File::open(FILENAME).unwrap();
+    let text = serde_json::to_string(&keystore).unwrap();
+    let ciphertext = crypt(&pwd, text);
+    match file.write(&ciphertext.unwrap()) {
+        Ok(_) => {}
+        Err(err) => {
+            panic!("Couldn't write in file, {}", err)
+        }
+    }
+}
 
 pub fn get_key(
     pwd: &String,

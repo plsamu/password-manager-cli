@@ -1,6 +1,5 @@
 use std::io::{self, Write};
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
 
 use crossterm::style::Color;
 use terminal_menu::TerminalMenuStruct;
@@ -42,9 +41,10 @@ pub fn read_password() -> std::string::String {
 
 pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
     let mut vec_menu = vec![
-        label("Password Manager CLI").colorize(Color::Blue),
+        label("Password Manager CLI (use 'q' or esc to exit)").colorize(Color::Blue),
         button(ADD_APP),
         button(REMOVE_APP),
+        label(" --- Apps --- ").colorize(Color::Magenta),
     ];
     let mut apps_buttons = vec![];
     let apps_name: Vec<&str> = keystore.apps.iter().map(|app| app.name.as_ref()).collect();
@@ -52,6 +52,9 @@ pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
         .iter()
         .for_each(|app_name| apps_buttons.push(button(app_name.to_string())));
     vec_menu.append(&mut apps_buttons);
-    vec_menu.push(button(EXIT));
+    vec_menu.append(&mut vec![
+        label(" --- ").colorize(Color::Magenta),
+        button(EXIT),
+    ]);
     menu(vec_menu)
 }
