@@ -21,7 +21,7 @@ use crate::utils::clear_screen;
 
 fn main() {
     ctrlc::set_handler(move || {
-        exit_without_save();
+        exit_without_save(0);
     })
     .expect("Error setting Ctrl-C handler");
     let path = Path::new(FILENAME);
@@ -91,7 +91,7 @@ fn run_app(password: String, mut keystore: Keystore) {
         terminal_menu::run(&menu);
         let mut_menu = terminal_menu::mut_menu(&menu);
         if mut_menu.canceled() {
-            exit_without_save();
+            exit_without_save(0);
         }
         match mut_menu.selected_item_name() {
             ADD_APP => {

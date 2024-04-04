@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::fs::OpenOptions;
 use std::io::Write;
 use std::time::Duration;
 
@@ -18,14 +18,18 @@ use crossterm::{
 
 use crate::{constants, Keystore};
 
-pub fn exit_without_save() {
+pub fn exit_without_save(exit_code: i32) {
     println!("Exit Without Saving");
     std::thread::sleep(Duration::from_millis(1100));
-    std::process::exit(1);
+    std::process::exit(exit_code);
 }
 
 pub fn save(pwd: &String, keystore: &Keystore) {
-    let mut file = File::open(FILENAME).unwrap();
+    let mut file = OpenOptions::new()
+        .read(false)
+        .write(true)
+        .open(FILENAME)
+        .unwrap();
     let text = serde_json::to_string(&keystore).unwrap();
     let ciphertext = crypt(&pwd, text);
     match file.write(&ciphertext.unwrap()) {
