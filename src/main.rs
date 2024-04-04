@@ -1,29 +1,24 @@
 pub mod constants;
+pub mod keystore_manager;
 pub mod models;
 pub mod profile_manager;
 pub mod utils;
 pub mod views;
 
-use crate::models::App;
-use crate::profile_manager::handle_profile_selected;
-use crate::utils::crypt;
-use crate::utils::decrypt;
 use crate::views::load_remove_apps_menu;
-use crate::views::read_user_input;
-use std::fs::File;
-use std::io::Write;
 use std::path::Path;
 use std::process::exit;
-use std::time::Duration;
 use std::vec;
 
 use constants::*;
+use keystore_manager::open_keystore;
 use models::Keystore;
+use utils::clear_screen;
 use utils::exit_without_save;
 use views::create_new_password;
-use views::load_menu_apps;
-
-use crate::utils::clear_screen;
+use views::load_add_app;
+use views::load_mut_main_menu;
+use views::load_profiles_menu;
 
 fn main() {
     ctrlc::set_handler(move || {
@@ -31,85 +26,43 @@ fn main() {
     })
     .expect("Error setting Ctrl-C handler");
     let path = Path::new(FILENAME);
-    if !path.exists() {
+    if path.exists() {
+        open_keystore();
+    } else {
         println!("Keystore not found. Creating master password:");
         let pwd = create_new_password(
             "Write your new master password: ",
             "Confirm master password: ",
         );
-        if let Err(err) = pwd {
-            panic!("Couldn't create master password: {}", err)
-        }
         let keystore: Keystore = Keystore { apps: vec![] };
-        let text = serde_json::to_string(&keystore).unwrap();
-        let ciphertext = crypt(&pwd.clone().unwrap(), text);
-        let mut data_file = File::create(path).expect("creation failed");
-        match data_file.write(&ciphertext.clone().unwrap()) {
-            Ok(_) => {}
-            Err(err) => {
-                panic!("Couldn't write in file, {}", err)
-            }
-        }
-        run_app(pwd.unwrap(), keystore)
-    } else {
-        let pwd = views::read_password();
-        let ciphertext: Vec<u8> = std::fs::read(FILENAME).expect("Unable to read file");
-        let content = decrypt(&pwd, ciphertext);
-        match serde_json::from_str::<Keystore>(&content) {
-            Ok(keystore) => run_app(pwd, keystore),
-            Err(err) => panic!(
-                "Could't read keystore, maybe it's corrupted. I'm sorry :( \n{}",
-                err
-            ),
-        }
+        run_app(pwd, keystore)
     }
 }
 
 fn run_app(password: String, mut keystore: Keystore) {
-    println!("{}", "Running App");
     loop {
         clear_screen();
-        let menu = load_menu_apps(&keystore);
-        terminal_menu::run(&menu);
-        let mut_menu = terminal_menu::mut_menu(&menu);
-        if mut_menu.canceled() {
-            exit_without_save(0);
+        let selected_item = load_mut_main_menu(&keystore);
+        handle_app_selection(&selected_item, &mut keystore, &password);
+    }
+}
+
+fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: &String) {
+    match selection {
+        ADD_APP => {
+            load_add_app(keystore);
         }
-        match mut_menu.selected_item_name() {
-            ADD_APP => {
-                let user_input_app_name = read_user_input("Insert App Name: ");
-                let mut already_exists = false;
-                keystore.apps.iter().for_each(|app| {
-                    if user_input_app_name == app.name {
-                        println!("App Already Exists");
-                        std::thread::sleep(Duration::from_millis(800));
-                        already_exists = true;
-                    }
-                });
-                if already_exists == false {
-                    keystore.apps.push(App {
-                        name: user_input_app_name,
-                        profiles: vec![],
-                    });
-                }
-            }
-            REMOVE_APP => {
-                let menu = load_remove_apps_menu(&keystore.apps);
-                terminal_menu::run(&menu);
-            }
-            SAVE_AND_EXIT => {
-                utils::save(&password, &keystore);
-                exit(0);
-            }
-            _ => keystore.apps.iter().for_each(|app| {
-                if app.name == mut_menu.selected_item_name() {
-                    let menu_profiles = views::load_menu_profiles(&app);
-                    terminal_menu::run(&menu_profiles);
-                    let mut_profile_menu = terminal_menu::mut_menu(&menu_profiles);
-                    let profile_selected = mut_profile_menu.selected_item_name();
-                    handle_profile_selected(profile_selected);
-                }
-            }),
+        REMOVE_APP => {
+            load_remove_apps_menu(&keystore.apps);
         }
+        SAVE_AND_EXIT => {
+            utils::save(password, &keystore);
+            exit(0);
+        }
+        _ => keystore.apps.iter().for_each(|app| {
+            if app.name == selection {
+                load_profiles_menu(app);
+            }
+        }),
     }
 }
