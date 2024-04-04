@@ -1,4 +1,5 @@
 use std::io::{self, Write};
+use std::process::exit;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
@@ -6,20 +7,9 @@ use crossterm::style::Color;
 use terminal_menu::{button, label, menu};
 use terminal_menu::{TerminalMenuItem, TerminalMenuStruct};
 
-use crate::models::{App, Profile};
-use crate::profile_manager::handle_profile_selected;
-use crate::utils::{clear_screen, exit_without_save};
-use crate::{
-    Keystore, ADD_APP, ADD_PROFILE, EXIT, ORANGE, REMOVE_APP, REMOVE_PROFILE, SAVE_AND_EXIT,
-};
-
-pub fn load_profiles_menu(app: &App) {
-    let menu_profiles = load_menu_profiles(&app);
-    terminal_menu::run(&menu_profiles);
-    let mut_profile_menu = terminal_menu::mut_menu(&menu_profiles);
-    let profile_selected = mut_profile_menu.selected_item_name();
-    handle_profile_selected(profile_selected);
-}
+use crate::models::App;
+use crate::utils::{self, clear_screen, exit_without_save};
+use crate::{profile, Keystore, ADD_APP, REMOVE_APP, SAVE_AND_EXIT};
 
 pub fn load_add_app(keystore: &mut Keystore) {
     let user_input_app_name = read_user_input("Insert App Name: ");
@@ -39,14 +29,35 @@ pub fn load_add_app(keystore: &mut Keystore) {
     }
 }
 
-pub fn load_mut_main_menu(keystore: &Keystore) -> String {
+pub fn run_main_menu(mut keystore: &mut Keystore, password: &String) {
     let menu = load_menu_apps(keystore);
     terminal_menu::run(&menu);
     let mut_menu = terminal_menu::mut_menu(&menu);
     if mut_menu.canceled() {
         exit_without_save(0);
     }
-    mut_menu.selected_item_name().to_string()
+    let selected = mut_menu.selected_item_name().to_string();
+    handle_app_selection(&selected, &mut keystore, &password);
+}
+
+fn handle_app_selection(selection: &str, mut keystore: &mut Keystore, password: &String) {
+    match selection {
+        ADD_APP => {
+            load_add_app(&mut keystore);
+        }
+        REMOVE_APP => {
+            load_remove_apps_menu(&keystore.apps);
+        }
+        SAVE_AND_EXIT => {
+            utils::save(password, &keystore);
+            exit(0);
+        }
+        _ => keystore.apps.iter().for_each(|app| {
+            if app.name == selection {
+                profile::run_menu(app);
+            }
+        }),
+    }
 }
 
 fn render_apps_menu(apps: &Vec<App>, color: Color) -> Vec<TerminalMenuItem> {
@@ -56,16 +67,6 @@ fn render_apps_menu(apps: &Vec<App>, color: Color) -> Vec<TerminalMenuItem> {
         .for_each(|app| apps_buttons.push(button(app.name.to_string())));
     apps_buttons.push(label(" --- ").colorize(color));
     apps_buttons
-}
-
-fn render_profiles_menu(profiles: &Vec<Profile>, color: Color) -> Vec<TerminalMenuItem> {
-    let mut profiles_buttons = vec![];
-    profiles_buttons.append(&mut vec![label(" --- Profiles --- ").colorize(color)]);
-    profiles
-        .iter()
-        .for_each(|profile| profiles_buttons.push(button(profile.profile_name.to_string())));
-    profiles_buttons.push(label(" --- ").colorize(color));
-    profiles_buttons
 }
 
 pub fn load_remove_apps_menu(apps: &Vec<App>) {
@@ -120,20 +121,6 @@ pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
         button(ADD_APP),
         button(REMOVE_APP),
         button(SAVE_AND_EXIT),
-    ]);
-    menu(apps_buttons)
-}
-
-pub fn load_menu_profiles(app: &App) -> Arc<RwLock<TerminalMenuStruct>> {
-    let mut apps_buttons = render_profiles_menu(&app.profiles, ORANGE);
-    apps_buttons.insert(
-        0,
-        label("App Profiles (use 'q' or esc to exit)").colorize(ORANGE),
-    );
-    apps_buttons.append(&mut vec![
-        button(ADD_PROFILE),
-        button(REMOVE_PROFILE),
-        button(EXIT),
     ]);
     menu(apps_buttons)
 }
