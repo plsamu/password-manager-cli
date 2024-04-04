@@ -20,7 +20,7 @@ use crate::{constants, Keystore};
 
 pub fn exit_without_save(exit_code: i32) {
     println!("Exit Without Saving");
-    std::thread::sleep(Duration::from_millis(1100));
+    std::thread::sleep(Duration::from_millis(800));
     std::process::exit(exit_code);
 }
 

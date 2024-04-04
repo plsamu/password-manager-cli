@@ -1,18 +1,22 @@
 pub mod constants;
+pub mod models;
 pub mod utils;
 pub mod views;
 
+use crate::models::App;
 use crate::utils::crypt;
 use crate::utils::decrypt;
+use crate::views::load_remove_apps_menu;
 use crate::views::read_user_input;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::process::exit;
+use std::time::Duration;
 use std::vec;
 
 use constants::*;
-use serde::{Deserialize, Serialize};
+use models::Keystore;
 use utils::exit_without_save;
 use views::create_new_password;
 use views::load_menu_apps;
@@ -52,37 +56,6 @@ fn main() {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct Pwd {
-    profile_name: String,
-    pwd: String,
-}
-
-#[derive(Serialize, Deserialize)]
-struct App {
-    name: String,
-    pwds: Vec<Pwd>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct Keystore {
-    apps: Vec<App>,
-}
-
-/**
- * > Add app
- * > Remove app
- * 	> app1 (with confirmations)
- * 	> ...
- * > app1
- *  > add_pwd
- *  > remove_pwd
- * 	> profile1
- * 	> profile2
- * 	> ...
- * > app2
- * > ...
- */
 fn run_app(password: String, mut keystore: Keystore) {
     println!("{}", "Running App");
     loop {
@@ -96,20 +69,35 @@ fn run_app(password: String, mut keystore: Keystore) {
         match mut_menu.selected_item_name() {
             ADD_APP => {
                 let user_input_app_name = read_user_input("Insert App Name: ");
-                keystore.apps.push(App {
-                    name: user_input_app_name,
-                    pwds: vec![],
+                let mut already_exists = false;
+                keystore.apps.iter().for_each(|app| {
+                    if user_input_app_name == app.name {
+                        println!("App Already Exists");
+                        std::thread::sleep(Duration::from_millis(800));
+                        already_exists = true;
+                    }
                 });
+                if already_exists == false {
+                    keystore.apps.push(App {
+                        name: user_input_app_name,
+                        profiles: vec![],
+                    });
+                }
             }
             REMOVE_APP => {
-                clear_screen();
-                println!("{}", REMOVE_APP)
+                let menu = load_remove_apps_menu(&keystore.apps);
+                terminal_menu::run(&menu);
             }
-            EXIT => {
+            SAVE_AND_EXIT => {
                 utils::save(&password, &keystore);
                 exit(0);
             }
-            _ => {}
+            _ => keystore.apps.iter().for_each(|app| {
+                if app.name == mut_menu.selected_item_name() {
+                    let menu_profiles = views::load_menu_profiles(&app);
+                    terminal_menu::run(&menu_profiles);
+                }
+            }),
         }
     }
 }
