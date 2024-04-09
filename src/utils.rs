@@ -6,6 +6,7 @@ use std::time::Duration;
 use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit};
 use constants::*;
+use crossterm::style::Color;
 use sha2::digest::generic_array::GenericArray;
 use sha2::digest::typenum::bit::{B0, B1};
 use sha2::digest::typenum::{UInt, UTerm};
@@ -16,7 +17,7 @@ use crossterm::{
     terminal::{Clear, ClearType},
     QueueableCommand,
 };
-use terminal_menu::TerminalMenuStruct;
+use terminal_menu::{button, label, menu, TerminalMenuStruct};
 
 use crate::{constants, Keystore};
 
@@ -25,9 +26,6 @@ pub fn run_and_get_mut_menu(
 ) -> RwLockWriteGuard<'_, TerminalMenuStruct> {
     terminal_menu::run(menu);
     let mut_menu = terminal_menu::mut_menu(&menu);
-    if mut_menu.canceled() {
-        exit_without_save(0);
-    }
     mut_menu
 }
 
@@ -53,6 +51,10 @@ pub fn read_password() -> std::string::String {
     rpassword::read_password().unwrap()
 }
 
+/**
+ * usage:
+ * 	let app_name = read_user_input("Insert App Name: ");
+ */
 pub fn read_user_input(msg: &str) -> std::string::String {
     std::io::stdout().flush().unwrap();
     println!("{}", msg);
@@ -61,6 +63,10 @@ pub fn read_user_input(msg: &str) -> std::string::String {
     input = input.trim().to_string();
     std::io::stdout().flush().unwrap();
     input
+}
+
+pub fn show_msg_to_user(msg: &str) {
+    terminal_menu::run(&menu(vec![label(msg).colorize(Color::Red), button(OK)]));
 }
 
 pub fn exit_without_save(exit_code: i32) {

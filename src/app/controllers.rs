@@ -1,15 +1,15 @@
 use crate::app::views;
-use crate::{models::App, profile, ADD_APP, REMOVE_APP, SAVE_AND_EXIT};
+use crate::profile;
+use crate::{models::App, ADD_APP, REMOVE_APP, SAVE_AND_EXIT};
 use crate::{
     models::Keystore,
     utils::{self},
 };
-use std::time::Duration;
 
-pub fn handle_app_selection(selection: &str, mut keystore: &mut Keystore, password: &String) {
+pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: &String) {
     match selection {
         ADD_APP => {
-            handle_add_app(&mut keystore);
+            handle_add_app(keystore);
         }
         REMOVE_APP => {
             views::load_remove_apps_menu(&keystore.apps);
@@ -18,25 +18,22 @@ pub fn handle_app_selection(selection: &str, mut keystore: &mut Keystore, passwo
             utils::save(password, &keystore);
             std::process::exit(0);
         }
-        _ => keystore.apps.iter().for_each(|app| {
-            if app.name == selection {
-                profile::load_menu_profiles(app);
-            }
-        }),
+        _ => match keystore.apps.iter_mut().find(|app| app.name.eq(selection)) {
+            Some(mut_app) => profile::load_menu_profiles(mut_app),
+            None => {}
+        },
     }
 }
 
 pub fn handle_add_app(keystore: &mut Keystore) {
     let user_input_app_name = utils::read_user_input("Insert App Name: ");
-    let mut already_exists = false;
-    keystore.apps.iter().for_each(|app| {
-        if user_input_app_name == app.name {
-            println!("App Already Exists");
-            std::thread::sleep(Duration::from_millis(800));
-            already_exists = true;
-        }
-    });
-    if already_exists == false {
+    if keystore
+        .apps
+        .iter()
+        .any(|app| app.name.eq(&user_input_app_name))
+    {
+        utils::show_msg_to_user("App Already Exists");
+    } else {
         keystore.apps.push(App {
             name: user_input_app_name,
             profiles: vec![],
