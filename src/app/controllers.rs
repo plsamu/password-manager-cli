@@ -1,20 +1,17 @@
-use crate::app::views;
-use crate::profile;
+use crate::utils::{run_and_get_mut_menu, yes_no_blocking_user_decision};
 use crate::{models::App, ADD_APP, REMOVE_APP, SAVE_AND_EXIT};
 use crate::{
     models::Keystore,
     utils::{self},
 };
+use crate::{profile, YES};
+
+use super::views::load_remove_app;
 
 pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: &String) {
     match selection {
-        ADD_APP => {
-            handle_add_app(keystore);
-        }
-        REMOVE_APP => {
-            views::load_remove_apps_menu(&keystore.apps);
-            // TODO
-        }
+        ADD_APP => handle_add_app(keystore),
+        REMOVE_APP => handle_remove_app(keystore),
         SAVE_AND_EXIT => {
             utils::save(password, &keystore);
             std::process::exit(0);
@@ -39,5 +36,18 @@ pub fn handle_add_app(keystore: &mut Keystore) {
             name: user_input_app_name,
             profiles: vec![],
         });
+    }
+}
+
+fn handle_remove_app(keystore: &mut Keystore) {
+    let menu = load_remove_app(&keystore.apps);
+    let mut_menu = run_and_get_mut_menu(&menu);
+    if mut_menu.canceled() {
+        return;
+    }
+    let selected = mut_menu.selected_item_name();
+    match yes_no_blocking_user_decision(&format!("Sure you want to remove {}?", selected)) {
+        YES => keystore.apps.retain(|app| app.name.ne(selected)),
+        _ => {}
     }
 }

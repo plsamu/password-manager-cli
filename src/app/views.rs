@@ -25,6 +25,15 @@ pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
     menu(apps_buttons)
 }
 
+pub fn load_remove_app(apps: &Vec<App>) -> Arc<RwLock<TerminalMenuStruct>> {
+    let mut apps_buttons = render_apps_menu(apps, Color::Red);
+    apps_buttons.insert(
+        0,
+        label(format!("{} {}", "Remove App", USE_KEY_TO_EXIT)).colorize(Color::Red),
+    );
+    menu(apps_buttons)
+}
+
 fn render_apps_menu(apps: &Vec<App>, color: Color) -> Vec<TerminalMenuItem> {
     let mut apps_buttons = vec![];
     apps_buttons.append(&mut vec![label(" --- Apps --- ").colorize(color)]);
@@ -32,14 +41,4 @@ fn render_apps_menu(apps: &Vec<App>, color: Color) -> Vec<TerminalMenuItem> {
         .for_each(|app| apps_buttons.push(button(app.name.to_string())));
     apps_buttons.push(label(" --- ").colorize(color));
     apps_buttons
-}
-
-pub fn load_remove_apps_menu(apps: &Vec<App>) {
-    let mut apps_buttons = render_apps_menu(apps, Color::Red);
-    apps_buttons.insert(
-        0,
-        label(format!("{} {}", "Remove App", USE_KEY_TO_EXIT)).colorize(Color::Red),
-    );
-    let menu = menu(apps_buttons);
-    terminal_menu::run(&menu);
 }
