@@ -1,5 +1,12 @@
 # password-manager-cli
 
+## Overview
+
+![confirm](imgs/confirm.png)
+![app](imgs/app.png)
+![profiles](imgs/profiles.png)
+![pwd-copy](imgs/pwd-copy.png)
+
 ## manual install
 
 ```bash
