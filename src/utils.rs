@@ -1,5 +1,6 @@
-use std::fs::OpenOptions;
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
+use std::path::Path;
 use std::sync::{Arc, RwLock, RwLockWriteGuard};
 use std::time::Duration;
 
@@ -102,22 +103,31 @@ pub fn exit_without_save(exit_code: i32) {
     std::process::exit(exit_code);
 }
 
-pub fn save(pwd: &String, keystore: &Keystore) {
+pub fn save(pwd: &String, keystore: &Keystore) -> io::Result<()> {
+    if Path::new(FILENAME).exists() {
+        /*
+           Fix a bug where keystore will not open when a saved app is removed
+        */
+        let _ = fs::remove_file(FILENAME);
+    }
     let mut file = OpenOptions::new()
         .read(false)
         .write(true)
-        .append(false) // will overwrite: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.write
-        .create(true) // different from create_new: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.create
+        // .append(false) // will overwrite: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.write
+        // different from create_new: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.create
+        .create(true)
         .open(FILENAME)
         .unwrap();
     let text = serde_json::to_string(&keystore).unwrap();
     let ciphertext = crypt(&pwd, text);
-    match file.write(&ciphertext.unwrap()) {
+    match file.write_all(&ciphertext.unwrap()) {
         Ok(_) => {}
         Err(err) => {
             panic!("Couldn't write in file, {}", err)
         }
     }
+    file.sync_all()?;
+    Ok(())
 }
 
 pub fn get_key(

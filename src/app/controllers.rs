@@ -13,7 +13,10 @@ pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: 
         ADD_APP => handle_add_app(keystore),
         REMOVE_APP => handle_remove_app(keystore),
         SAVE_AND_EXIT => {
-            utils::save(password, &keystore);
+            match utils::save(password, &keystore) {
+                Ok(_) => {}
+                Err(err) => panic!("Error while saving file: {}", err),
+            }
             std::process::exit(0);
         }
         _ => match keystore.apps.iter_mut().find(|app| app.name.eq(selection)) {
