@@ -1,5 +1,6 @@
 use std::fs::OpenOptions;
 use std::io::{self, Write};
+use std::sync::{Arc, RwLock, RwLockWriteGuard};
 use std::time::Duration;
 
 use chacha20poly1305::aead::Aead;
@@ -15,8 +16,20 @@ use crossterm::{
     terminal::{Clear, ClearType},
     QueueableCommand,
 };
+use terminal_menu::TerminalMenuStruct;
 
 use crate::{constants, Keystore};
+
+pub fn run_and_get_mut_menu(
+    menu: &Arc<RwLock<TerminalMenuStruct>>,
+) -> RwLockWriteGuard<'_, TerminalMenuStruct> {
+    terminal_menu::run(menu);
+    let mut_menu = terminal_menu::mut_menu(&menu);
+    if mut_menu.canceled() {
+        exit_without_save(0);
+    }
+    mut_menu
+}
 
 pub fn create_new_password(message: &str, confirm_message: &str) -> String {
     loop {
