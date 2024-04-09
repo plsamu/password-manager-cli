@@ -13,6 +13,7 @@ pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: 
         }
         REMOVE_APP => {
             views::load_remove_apps_menu(&keystore.apps);
+            // TODO
         }
         SAVE_AND_EXIT => {
             utils::save(password, &keystore);
@@ -32,7 +33,7 @@ pub fn handle_add_app(keystore: &mut Keystore) {
         .iter()
         .any(|app| app.name.eq(&user_input_app_name))
     {
-        utils::show_msg_to_user("App Already Exists");
+        utils::show_blocking_msg_to_user("App Already Exists");
     } else {
         keystore.apps.push(App {
             name: user_input_app_name,

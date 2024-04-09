@@ -17,7 +17,7 @@ use crossterm::{
     terminal::{Clear, ClearType},
     QueueableCommand,
 };
-use terminal_menu::{button, label, menu, TerminalMenuStruct};
+use terminal_menu::{button, label, list, menu, TerminalMenuStruct};
 
 use crate::{constants, Keystore};
 
@@ -68,13 +68,37 @@ pub fn read_user_input(msg: &str, clear_screen_flag: bool) -> std::string::Strin
     input
 }
 
-pub fn show_msg_to_user(msg: &str) {
+pub fn show_blocking_msg_to_user(msg: &str) {
     terminal_menu::run(&menu(vec![label(msg).colorize(Color::Red), button(OK)]));
 }
 
+pub fn yes_no_blocking_user_decision(msg: &str) -> &str {
+    let menu = menu(vec![list(msg, vec![NO, YES]), button(OK)]);
+    terminal_menu::run(&menu);
+    let mut_menu = run_and_get_mut_menu(&menu);
+    match mut_menu.selection_value(msg) {
+        YES => {
+            return YES;
+        }
+        NO => {
+            return NO;
+        }
+        _ => {
+            return NO;
+        }
+    }
+}
+
+pub fn show_msg_to_user(msg: &str, millis: u64, clear_screen_flag: bool) {
+    if clear_screen_flag {
+        clear_screen();
+    }
+    println!("{}", msg);
+    std::thread::sleep(Duration::from_millis(millis));
+}
+
 pub fn exit_without_save(exit_code: i32) {
-    println!("Exit Without Saving");
-    std::thread::sleep(Duration::from_millis(800));
+    show_msg_to_user("Exit Without Saving", 800, false);
     std::process::exit(exit_code);
 }
 
@@ -83,6 +107,7 @@ pub fn save(pwd: &String, keystore: &Keystore) {
         .read(false)
         .write(true)
         .append(false) // will overwrite: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.write
+        .create(true) // different from create_new: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.create
         .open(FILENAME)
         .unwrap();
     let text = serde_json::to_string(&keystore).unwrap();
