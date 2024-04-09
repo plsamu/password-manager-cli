@@ -55,7 +55,10 @@ pub fn read_password() -> std::string::String {
  * usage:
  * 	let app_name = read_user_input("Insert App Name: ");
  */
-pub fn read_user_input(msg: &str) -> std::string::String {
+pub fn read_user_input(msg: &str, clear_screen_flag: bool) -> std::string::String {
+    if clear_screen_flag {
+        clear_screen();
+    }
     std::io::stdout().flush().unwrap();
     println!("{}", msg);
     let mut input = String::new();
@@ -79,6 +82,7 @@ pub fn save(pwd: &String, keystore: &Keystore) {
     let mut file = OpenOptions::new()
         .read(false)
         .write(true)
+        .append(false) // will overwrite: https://doc.rust-lang.org/std/fs/struct.OpenOptions.html#method.write
         .open(FILENAME)
         .unwrap();
     let text = serde_json::to_string(&keystore).unwrap();

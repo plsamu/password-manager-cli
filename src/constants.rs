@@ -19,4 +19,5 @@ pub const EXIT: &str = "Exit";
 pub const ADD_PROFILE: &str = "Add Profile";
 pub const REMOVE_PROFILE: &str = "Remove Profile";
 pub const OPEN_KEYSTORE_ERROR: &str = "Could't read keystore, maybe it's corrupted. I'm sorry :(";
+pub const USE_KEY_TO_EXIT: &str = "(use 'q' or esc to exit)";
 pub const USE_KEY_TO_EXIT_WITHOUT_SAVE: &str = "(use 'q' or esc to exit without save)";

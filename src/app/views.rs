@@ -1,6 +1,6 @@
 use crate::models::Keystore;
-use crate::REMOVE_APP;
 use crate::{models::App, ADD_APP, SAVE_AND_EXIT};
+use crate::{REMOVE_APP, USE_KEY_TO_EXIT, USE_KEY_TO_EXIT_WITHOUT_SAVE};
 use crossterm::style::Color;
 use std::sync::{Arc, RwLock};
 use terminal_menu::TerminalMenuItem;
@@ -11,7 +11,11 @@ pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
     let mut apps_buttons = render_apps_menu(&keystore.apps, Color::Magenta);
     apps_buttons.insert(
         0,
-        label("Password Manager CLI (use 'q' or esc to exit)").colorize(Color::Magenta),
+        label(format!(
+            "{} {}",
+            "Password Manager CLI", USE_KEY_TO_EXIT_WITHOUT_SAVE
+        ))
+        .colorize(Color::Magenta),
     );
     apps_buttons.append(&mut vec![
         button(ADD_APP),
@@ -34,7 +38,7 @@ pub fn load_remove_apps_menu(apps: &Vec<App>) {
     let mut apps_buttons = render_apps_menu(apps, Color::Red);
     apps_buttons.insert(
         0,
-        label("Remove App (use 'q' or esc to exit)").colorize(Color::Red),
+        label(format!("{} {}", "Remove App", USE_KEY_TO_EXIT)).colorize(Color::Red),
     );
     let menu = menu(apps_buttons);
     terminal_menu::run(&menu);

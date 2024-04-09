@@ -26,7 +26,7 @@ pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: 
 }
 
 pub fn handle_add_app(keystore: &mut Keystore) {
-    let user_input_app_name = utils::read_user_input("Insert App Name: ");
+    let user_input_app_name = utils::read_user_input("Insert App Name: ", true);
     if keystore
         .apps
         .iter()
