@@ -1,5 +1,12 @@
 # password-manager-cli
 
+## manual install
+
+```bash
+git clone
+cargo build --release
+```
+
 ## sources
 
 - <https://github.com/RustCrypto>

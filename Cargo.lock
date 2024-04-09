@@ -127,23 +127,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cript-file"
-version = "0.1.0"
-dependencies = [
- "chacha20poly1305",
- "cli-clipboard",
- "crossterm",
- "ctrlc",
- "passwords",
- "pbkdf2",
- "rpassword",
- "serde",
- "serde_json",
- "sha2",
- "terminal-menu",
-]
-
-[[package]]
 name = "crossterm"
 version = "0.25.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -523,6 +506,23 @@ dependencies = [
  "redox_syscall",
  "smallvec",
  "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "password-manager-cli"
+version = "0.1.0"
+dependencies = [
+ "chacha20poly1305",
+ "cli-clipboard",
+ "crossterm",
+ "ctrlc",
+ "passwords",
+ "pbkdf2",
+ "rpassword",
+ "serde",
+ "serde_json",
+ "sha2",
+ "terminal-menu",
 ]
 
 [[package]]
