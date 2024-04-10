@@ -8,9 +8,6 @@ use chacha20poly1305::aead::Aead;
 use chacha20poly1305::{ChaCha20Poly1305, Key, KeyInit};
 use constants::*;
 use crossterm::style::Color;
-use sha2::digest::generic_array::GenericArray;
-use sha2::digest::typenum::bit::{B0, B1};
-use sha2::digest::typenum::{UInt, UTerm};
 use sha2::Sha512;
 
 use crossterm::{
@@ -26,7 +23,7 @@ pub fn run_and_get_mut_menu(
     menu: &Arc<RwLock<TerminalMenuStruct>>,
 ) -> RwLockWriteGuard<'_, TerminalMenuStruct> {
     terminal_menu::run(menu);
-    let mut_menu = terminal_menu::mut_menu(&menu);
+    let mut_menu = terminal_menu::mut_menu(menu);
     mut_menu
 }
 
@@ -54,7 +51,7 @@ pub fn read_password() -> std::string::String {
 
 /**
  * usage:
- * 	let app_name = read_user_input("Insert App Name: ");
+ *     let app_name = read_user_input("Insert App Name: ");
  */
 pub fn read_user_input(msg: &str, clear_screen_flag: bool) -> std::string::String {
     if clear_screen_flag {
@@ -78,15 +75,9 @@ pub fn yes_no_blocking_user_decision(msg: &str) -> &str {
     terminal_menu::run(&menu);
     let mut_menu = run_and_get_mut_menu(&menu);
     match mut_menu.selection_value(msg) {
-        YES => {
-            return YES;
-        }
-        NO => {
-            return NO;
-        }
-        _ => {
-            return NO;
-        }
+        YES => YES,
+        NO => NO,
+        _ => NO,
     }
 }
 
@@ -119,7 +110,7 @@ pub fn save(pwd: &String, keystore: &Keystore) -> io::Result<()> {
         .open(FILENAME)
         .unwrap();
     let text = serde_json::to_string(&keystore).unwrap();
-    let ciphertext = crypt(&pwd, text);
+    let ciphertext = crypt(pwd, text);
     match file.write_all(&ciphertext.unwrap()) {
         Ok(_) => {}
         Err(err) => {
@@ -130,22 +121,20 @@ pub fn save(pwd: &String, keystore: &Keystore) -> io::Result<()> {
     Ok(())
 }
 
-pub fn get_key(
-    pwd: &String,
-) -> GenericArray<u8, UInt<UInt<UInt<UInt<UInt<UInt<UTerm, B1>, B0>, B0>, B0>, B0>, B0>> {
+pub fn get_key(pwd: &String) -> Key {
     let mut buf = [0u8; 32];
     pbkdf2::pbkdf2_hmac::<Sha512>(pwd.as_bytes(), SALT, ROUNDS, &mut buf);
     Key::from(buf)
 }
 
 pub fn crypt(pwd: &String, text: String) -> Result<Vec<u8>, chacha20poly1305::Error> {
-    println!("{}", "encrypting keystore");
+    println!("encrypting keystore");
     let cipher = ChaCha20Poly1305::new(&get_key(pwd));
     cipher.encrypt(SALT.into(), text.as_bytes().as_ref())
 }
 
 pub fn decrypt(pwd: &String, ciphertext: Vec<u8>) -> String {
-    println!("{}", "decrypting keystore");
+    println!("decrypting keystore");
     let cipher = ChaCha20Poly1305::new(&get_key(pwd));
     if ciphertext.is_empty() {
         return "".to_string();
@@ -160,7 +149,7 @@ pub fn decrypt(pwd: &String, ciphertext: Vec<u8>) -> String {
     if let Err(err) = res_utf8 {
         panic!("Invalid UTF-8 sequence: {}", err)
     }
-    println!("{}", "keystore decrypted");
+    println!("keystore decrypted");
     res_utf8.unwrap().to_string()
 }
 

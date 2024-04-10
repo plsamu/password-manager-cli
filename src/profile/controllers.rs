@@ -40,17 +40,14 @@ pub fn handle_profile_selected(app: &mut App, profile_selected: &str) {
         }
         REMOVE_PROFILE => handle_remove_profile(app),
         _ => {
-            match app
+            if let Some(profile) = app
                 .profiles
                 .iter()
                 .find(|profile| profile.profile_name.eq(&profile_selected))
             {
-                Some(profile) => {
-                    let mut ctx = ClipboardContext::new().unwrap();
-                    ctx.set_contents(profile.pwd.clone()).unwrap();
-                    show_msg_to_user("Password copied to clipboard", 800, true);
-                }
-                None => {}
+                let mut ctx = ClipboardContext::new().unwrap();
+                ctx.set_contents(profile.pwd.clone()).unwrap();
+                show_msg_to_user("Password copied to clipboard", 800, true);
             }
         }
     }
@@ -63,10 +60,8 @@ fn handle_remove_profile(app: &mut App) {
         return;
     }
     let selected = mut_menu.selected_item_name();
-    match yes_no_blocking_user_decision(&format!("Sure you want to remove {}?", selected)) {
-        YES => app
-            .profiles
-            .retain(|profile| profile.profile_name.ne(selected)),
-        _ => {}
+    if YES == yes_no_blocking_user_decision(&format!("Sure you want to remove {}?", selected)) {
+        app.profiles
+            .retain(|profile| profile.profile_name.ne(selected))
     }
 }

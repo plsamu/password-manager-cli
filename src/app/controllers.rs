@@ -13,16 +13,17 @@ pub fn handle_app_selection(selection: &str, keystore: &mut Keystore, password: 
         ADD_APP => handle_add_app(keystore),
         REMOVE_APP => handle_remove_app(keystore),
         SAVE_AND_EXIT => {
-            match utils::save(password, &keystore) {
+            match utils::save(password, keystore) {
                 Ok(_) => {}
                 Err(err) => panic!("Error while saving file: {}", err),
             }
             std::process::exit(0);
         }
-        _ => match keystore.apps.iter_mut().find(|app| app.name.eq(selection)) {
-            Some(mut_app) => profile::load_menu_profiles(mut_app),
-            None => {}
-        },
+        _ => {
+            if let Some(mut_app) = keystore.apps.iter_mut().find(|app| app.name.eq(selection)) {
+                profile::load_menu_profiles(mut_app)
+            }
+        }
     }
 }
 
@@ -49,8 +50,7 @@ fn handle_remove_app(keystore: &mut Keystore) {
         return;
     }
     let selected = mut_menu.selected_item_name();
-    match yes_no_blocking_user_decision(&format!("Sure you want to remove {}?", selected)) {
-        YES => keystore.apps.retain(|app| app.name.ne(selected)),
-        _ => {}
+    if yes_no_blocking_user_decision(&format!("Sure you want to remove {}?", selected)) == YES {
+        keystore.apps.retain(|app| app.name.ne(selected))
     }
 }

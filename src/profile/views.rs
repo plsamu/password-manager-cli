@@ -30,7 +30,7 @@ pub fn load_menu(app: &App) -> Arc<RwLock<TerminalMenuStruct>> {
     terminal_menu::menu(items)
 }
 
-pub fn render_profiles_menu(profiles: &Vec<Profile>, color: Color) -> Vec<TerminalMenuItem> {
+pub fn render_profiles_menu(profiles: &[Profile], color: Color) -> Vec<TerminalMenuItem> {
     let mut profiles_buttons = vec![];
     profiles_buttons.append(&mut vec![label(" --- Profiles --- ").colorize(color)]);
     profiles

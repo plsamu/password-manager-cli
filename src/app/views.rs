@@ -25,7 +25,7 @@ pub fn load_menu_apps(keystore: &Keystore) -> Arc<RwLock<TerminalMenuStruct>> {
     menu(apps_buttons)
 }
 
-pub fn load_remove_app(apps: &Vec<App>) -> Arc<RwLock<TerminalMenuStruct>> {
+pub fn load_remove_app(apps: &[App]) -> Arc<RwLock<TerminalMenuStruct>> {
     let mut apps_buttons = render_apps_menu(apps, Color::Red);
     apps_buttons.insert(
         0,
@@ -34,7 +34,7 @@ pub fn load_remove_app(apps: &Vec<App>) -> Arc<RwLock<TerminalMenuStruct>> {
     menu(apps_buttons)
 }
 
-fn render_apps_menu(apps: &Vec<App>, color: Color) -> Vec<TerminalMenuItem> {
+fn render_apps_menu(apps: &[App], color: Color) -> Vec<TerminalMenuItem> {
     let mut apps_buttons = vec![];
     apps_buttons.append(&mut vec![label(" --- Apps --- ").colorize(color)]);
     apps.iter()
